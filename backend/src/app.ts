@@ -9,35 +9,38 @@ import ledgerRoutes from "./modules/ledger/ledger.routes.ts";
 import inventoryRoutes from "./modules/inventory/inventory.routes.ts";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.ts";
 
-const app  = express();
+const app = express();
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Dynamically allow all incoming origins (supports credentials: true)
-    callback(null, true);
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     callback(null, true);
+//   },
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   credentials: true
+// }));'
 
-
+app.use(
+  cors({
+    origin: "*",
+  }),
+);
 
 app.use(express.json());
 
-app.get('/', (_req, res) => {
+app.get("/", (_req, res) => {
   res.json({
-    success:true,
-    message:"🟢 Inventory Management API is Running"
-  })
-})
+    success: true,
+    message: "🟢 Inventory Management API is Running",
+  });
+});
 
-app.use("/api/auth", authRoutes)
-app.use("/api/products", productRoutes)
-app.use("/api/purchases", purchaseRoutes)
-app.use("/api/sales", saleRoutes)
-app.use("/api/ledger", ledgerRoutes)
-app.use("/api/inventory", inventoryRoutes)
-app.use("/api/dashboard", dashboardRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/purchases", purchaseRoutes);
+app.use("/api/sales", saleRoutes);
+app.use("/api/ledger", ledgerRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(errorMiddleware);
 
