@@ -3,7 +3,7 @@ import { env } from "./env.ts";
 
 const kafkaConfig: KafkaConfig = {
   clientId: "inventory-management",
-  brokers: [env.KAFKA_BROKER || "localhost:9092"],
+  brokers: env.KAFKA_BROKER.split(",") || "localhost:9092",
 };
 
 if (env.KAFKA_USERNAME && env.KAFKA_PASSWORD) {
