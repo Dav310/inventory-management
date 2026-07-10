@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { Input } from "./ui/Input.tsx";
 import { Button } from "./ui/Button.tsx";
 import { apiService } from "../lib/apiService.ts";
-import { KeyRound, Lock } from "lucide-react";
+import { KeyRound, Lock, Eye, EyeOff } from "lucide-react";
 
 interface LoginProps {
   onLoginSuccess: (token: string) => void;
@@ -79,9 +79,18 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             placeholder="••••••••"
             {...register("password", { required: "Password is required" })}
             error={errors.password?.message as string}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 focus:outline-none cursor-pointer flex items-center"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            }
           />
 
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 px-1">
+          <div className="flex items-center text-xs font-semibold text-slate-500 px-1">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -90,16 +99,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 className="accent-emerald-600 h-4 w-4"
               />
               Remember Me
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={showPassword}
-                onChange={(e) => setShowPassword(e.target.checked)}
-                className="accent-emerald-600 h-4 w-4"
-              />
-              Show Password
             </label>
           </div>
 
