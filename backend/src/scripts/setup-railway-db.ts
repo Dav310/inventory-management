@@ -25,7 +25,12 @@ async function main() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         description TEXT
       );
-      
+    `);
+    
+    // Ensure description column exists in products table
+    await client.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;");
+    
+    await client.query(`
       CREATE TABLE IF NOT EXISTS inventory_batch (
         id SERIAL PRIMARY KEY,
         product_id VARCHAR(50) NOT NULL,

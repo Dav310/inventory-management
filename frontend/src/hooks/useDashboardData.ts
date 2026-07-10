@@ -80,13 +80,13 @@ export const useDashboardData = (onLogout: () => void) => {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchData();
-    }, 3000);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     fetchData();
+  //   }, 3000);
 
-    return () => clearInterval(interval);
-  }, [fetchData]);
+  //   return () => clearInterval(interval);
+  // }, [fetchData]);
 
   return {
     stats,
