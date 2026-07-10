@@ -16,7 +16,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       username: localStorage.getItem("remembered_username") || "",
-      password: ""
+      password: localStorage.getItem("remembered_password") || ""
     }
   });
 
@@ -31,8 +31,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
       if (rememberMe) {
         localStorage.setItem("remembered_username", data.username);
+        localStorage.setItem("remembered_password", data.password);
       } else {
         localStorage.removeItem("remembered_username");
+        localStorage.removeItem("remembered_password");
       }
 
       const token = loginData.token;
