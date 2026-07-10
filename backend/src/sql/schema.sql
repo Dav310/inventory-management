@@ -52,7 +52,7 @@ CREATE TABLE
   inventory_ledger (
     id SERIAL PRIMARY KEY,
     product_id VARCHAR(50) NOT NULL,
-    transaction_type VARCHAR(20) NOT NULL, -- 'purchase' or 'sale'
+    transaction_type VARCHAR(20) NOT NULL,
     quantity INTEGER NOT NULL,
     unit_price DECIMAL(10, 2),
     total_cost DECIMAL(10, 2) NOT NULL,

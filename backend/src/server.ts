@@ -15,8 +15,12 @@ const startServer = async () => {
       await pool.query("SELECT NOW()");
       console.log("🟢 Database connected");
       
-      await initTopics();
-      await startConsumer();
+      try {
+        await initTopics();
+        await startConsumer();
+      } catch (kafkaError) {
+        console.error("⚠️ Kafka initialization failed. Continuing server start...", kafkaError);
+      }
       
       app.listen(PORT, () => {
         console.log(`🟢 Server is Running on port ${PORT}`);

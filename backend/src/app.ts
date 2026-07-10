@@ -11,17 +11,13 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes.ts";
 
 const app = express();
 
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     callback(null, true);
-//   },
-//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//   credentials: true
-// }));'
-
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
   }),
 );
 

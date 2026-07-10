@@ -1,8 +1,6 @@
 import axios from "axios";
 
-const apiBase =
-  "https://inventory-management-production-35a1.up.railway.app";
-// const apiBase = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+const apiBase = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 export const api = axios.create({
   baseURL: `${apiBase.replace(/\/$/, "")}/api`,
 });
