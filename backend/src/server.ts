@@ -8,23 +8,31 @@ import { startConsumer } from "./kafka/consumer.ts";
 
 const PORT = env.PORT || 5000;
 
+
 const startServer = async () => {
   try {
     await pool.query("SELECT NOW()");
     console.log("🟢 Database connected");
     
-    // Initialize Kafka infrastructure
-    await initTopics();
-    await startConsumer();
-    
-    app.listen(PORT, () => {
-      console.log(`🟢 Server is Running on port ${PORT}`);
-    });
+    if (!process.env.VERCEL) {
+      await initTopics();
+      await startConsumer();
+      
+      app.listen(PORT, () => {
+        console.log(`🟢 Server is Running on port ${PORT}`);
+      });
+    } else {
+      console.log("⚡ Running in Vercel Serverless environment");
+    }
   } catch (error) {
-    console.error("❌ Database Connection Failed");
+    console.error("❌ Server initialization failed");
     console.error(error);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 };
 
 startServer();
+
+export default app;

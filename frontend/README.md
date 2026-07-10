@@ -1,32 +1,52 @@
-# React + TypeScript + Vite
+# FIFO Inventory Management - Frontend Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This is the interactive single-page dashboard application for the FIFO Inventory Management System. It communicates with the backend REST APIs to present stock levels, ledger reports, and dynamic batch breakdowns.
 
-Currently, two official plugins are available:
+## Features & Visual Modules
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+*   **Live Data Sync**: Implements 3-second auto-polling to keep inventory levels, ledger entries, and KPI cards updated in real-time.
+*   **Product Stock Overview (Accordion Grouping)**: 
+    *   Lists unique product items with their total remaining stock units, total current valuations, and calculated average cost per unit.
+    *   Clicking a product row expands an accordion sub-table displaying detailed active batches (Received Time, Unit Price, Original Qty, Remaining Qty, and Value).
+    *   If a batch or product runs completely out of stock, its indicator turns red.
+*   **Transaction Ledger Tabs**: 
+    *   Provides two dedicated view tabs for Buy (Purchases) and Sell (Sales).
+    *   Displays quantities, dates, unit prices, and total margins.
+*   **Administrative Actions**:
+    *   Contains reactive tabs to:
+        *   Register new product codes.
+        *   Post a new purchase transaction (which generates a Kafka buy event).
+        *   Post a new sale transaction (which generates a Kafka sell event).
+*   **Login View**:
+    *   Secure access control screen with remember-me cookie functionality and an inner-input eye icon toggle to reveal/hide credentials.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Technical Stack
+*   **Framework**: React.js (Vite + TypeScript)
+*   **Styling**: Tailwind CSS
+*   **Forms**: React Hook Form
+*   **HTTP Clients**: Axios
+*   **Icons**: Lucide React
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Setup & Running Locally
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### 1. Environment Setup
+Create a `.env` file in the root frontend directory:
+
+```env
+VITE_API_URL=http://localhost:5000
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### 2. Install and Start
+
+Run the following commands:
+
+```bash
+pnpm install
+pnpm dev
+```
+
+The frontend portal will start at `http://localhost:5173`. Ensure the backend server is running so that API requests resolve correctly.

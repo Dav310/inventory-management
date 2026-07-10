@@ -10,7 +10,28 @@ import inventoryRoutes from "./modules/inventory/inventory.routes.ts";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.ts";
 
 const app  = express();
-app.use(cors());
+
+const allowedOrigins = [
+  process.env.LIVE_URL,
+  "http://localhost:5173",
+  "http://localhost:3000"
+].filter(Boolean) as string[];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+}));
+
+
 
 app.use(express.json());
 
