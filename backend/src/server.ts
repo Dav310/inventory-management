@@ -11,10 +11,10 @@ const PORT = env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    await pool.query("SELECT NOW()");
-    console.log("🟢 Database connected");
-    
     if (!process.env.VERCEL) {
+      await pool.query("SELECT NOW()");
+      console.log("🟢 Database connected");
+      
       await initTopics();
       await startConsumer();
       

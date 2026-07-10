@@ -12,9 +12,8 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes.ts";
 const app  = express();
 
 const allowedOrigins = [
-  process.env.LIVE_URL,
-  "http://localhost:5173",
-  "http://localhost:3000"
+  process.env.LIVE_URL 
+  // || process.env.LOCAL_URL
 ].filter(Boolean) as string[];
 
 app.use(cors({
