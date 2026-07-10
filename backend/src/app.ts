@@ -11,20 +11,10 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes.ts";
 
 const app  = express();
 
-const allowedOrigins = [
-  process.env.LIVE_URL 
-  // || process.env.LOCAL_URL
-].filter(Boolean) as string[];
-
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
+    // Dynamically allow all incoming origins (supports credentials: true)
+    callback(null, true);
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
