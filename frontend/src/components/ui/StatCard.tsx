@@ -7,11 +7,15 @@ interface StatCardProps {
   icon: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, footer, className = "" }) => {
+export const StatCard: React.FC<StatCardProps> = ({ label, value, icon, footer, className = "", onClick }) => {
   return (
-    <div className={`${styles.metricCard} ${className}`}>
+    <div 
+      onClick={onClick}
+      className={`${styles.metricCard} ${className} ${onClick ? "cursor-pointer hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow" : ""}`}
+    >
       <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
       
       <div className="flex justify-between items-start">
