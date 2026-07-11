@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import type { InventoryBatch } from "../../hooks/useDashboardData.ts";
 import { styles } from "../../lib/styles.ts";
-import { Layers } from "lucide-react";
-import { Pagination } from "../ui/Pagination.tsx";
+import { Layers, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 interface InventoryBatchesProps {
   batches: InventoryBatch[];
@@ -17,13 +23,34 @@ const formatTime = (dateStr: string) => {
   return `${hh}:${mm}`;
 };
 
+const headerCellSx = {
+  fontSize: "0.75rem",
+  fontWeight: 700,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  py: 1.5,
+  px: 2,
+  borderBottom: "1px solid #f1f5f9",
+  backgroundColor: "rgba(248, 250, 252, 0.75)",
+};
+
+const cellSx = {
+  fontSize: "0.875rem",
+  color: "#334155",
+  py: 2,
+  px: 2,
+  borderBottom: "1px solid #f8fafc",
+  whiteSpace: "nowrap",
+};
+
 export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
   batches,
   expandedProductId,
   onToggleExpand,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const grouped: {
     product_id: string;
@@ -54,17 +81,46 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
   });
 
   const totalItems = grouped.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.ceil(totalItems / rowsPerPage);
 
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
+    if (page >= totalPages && totalPages > 0) {
+      setPage(totalPages - 1);
     }
-  }, [totalPages, currentPage]);
+  }, [totalPages, page]);
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const paginatedGrouped = grouped.slice(startIndex, endIndex);
+  const paginatedGrouped = grouped.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const startIndex = page * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, totalItems);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 0; i < totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(0, page - 2);
+      let end = Math.min(totalPages - 1, page + 2);
+
+      if (page <= 2) {
+        end = 4;
+      } else if (page >= totalPages - 3) {
+        start = totalPages - 5;
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className={styles.card}>
@@ -75,23 +131,23 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
         Oldest batches are consumed first. Click a product row to inspect its active batches.
       </p>
       <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.tableHeaderCell}>Product</th>
-              <th className={styles.tableHeaderCell}>Active Batches</th>
-              <th className={styles.tableHeaderCell}>Total Stock</th>
-              <th className={styles.tableHeaderCell}>Avg Cost / Unit</th>
-              <th className={styles.tableHeaderCell}>Total Valuation</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table size="small" sx={{ minWidth: 600 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={headerCellSx}>Product</TableCell>
+              <TableCell sx={headerCellSx}>Active Batches</TableCell>
+              <TableCell sx={headerCellSx}>Total Stock</TableCell>
+              <TableCell sx={headerCellSx}>Avg Cost / Unit</TableCell>
+              <TableCell sx={headerCellSx}>Total Valuation</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {paginatedGrouped.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center py-8 text-slate-400 font-semibold">
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 6, color: "#94a3b8", border: 0 }}>
                   Inventory is empty. Register purchases to add stock.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               paginatedGrouped.map((group) => {
                 const isExpanded = expandedProductId === group.product_id;
@@ -99,15 +155,19 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                   group.totalRemaining > 0 ? group.totalValue / group.totalRemaining : 0;
                 return (
                   <React.Fragment key={group.product_id}>
-                    <tr
+                    <TableRow
                       onClick={() => onToggleExpand(isExpanded ? null : group.product_id)}
-                      className={`${styles.tableRow} cursor-pointer border-l-4 ${
-                        isExpanded
-                          ? "border-l-emerald-500 bg-emerald-50/10"
-                          : "border-l-transparent"
-                      }`}
+                      hover
+                      sx={{
+                        cursor: "pointer",
+                        borderLeft: isExpanded ? "4px solid #10b981" : "4px solid transparent",
+                        backgroundColor: isExpanded ? "rgba(16, 185, 129, 0.04) !important" : "inherit",
+                        "&:hover": {
+                          backgroundColor: "rgba(248, 250, 252, 0.4) !important",
+                        },
+                      }}
                     >
-                      <td className={styles.tableCell}>
+                      <TableCell sx={cellSx}>
                         <div className="flex items-center gap-2">
                           <span
                             className={`text-[9px] transition-transform duration-200 ${
@@ -121,13 +181,13 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                             <div className="text-xs text-slate-400">{group.product_id}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className={styles.tableCell}>
+                      </TableCell>
+                      <TableCell sx={cellSx}>
                         <span className="font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
                           {group.batchesCount} {group.batchesCount === 1 ? "batch" : "batches"}
                         </span>
-                      </td>
-                      <td className={styles.tableCell}>
+                      </TableCell>
+                      <TableCell sx={cellSx}>
                         {group.totalRemaining === 0 ? (
                           <span className="font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 text-xs">
                             0 units
@@ -135,59 +195,63 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                         ) : (
                           <span className="font-bold text-slate-800">{group.totalRemaining} units</span>
                         )}
-                      </td>
-                      <td className={styles.tableCell}>
+                      </TableCell>
+                      <TableCell sx={cellSx}>
                         <span className="font-bold text-slate-800">₹{avgCost.toFixed(2)}</span>
-                      </td>
-                      <td className={styles.tableCell}>
+                      </TableCell>
+                      <TableCell sx={cellSx}>
                         <span className="font-extrabold text-emerald-700">
                           ₹{group.totalValue.toFixed(2)}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                     {isExpanded && (
-                      <tr className="bg-slate-50/30">
-                        <td colSpan={5} className="px-4 py-3.5 border-b border-slate-100">
+                      <TableRow sx={{ backgroundColor: "rgba(248, 250, 252, 0.3)" }}>
+                        <TableCell colSpan={5} sx={{ p: 2, borderBottom: "1px solid #f1f5f9" }}>
                           <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-                            <table className="w-full text-xs text-left text-slate-600">
-                              <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100">
-                                  <th className="px-3 py-2 font-bold text-slate-500 uppercase tracking-wider">
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow sx={{ backgroundColor: "#f8fafc" }}>
+                                  <TableCell sx={{ fontSize: "11px", fontWeight: 700, color: "#64748b", py: 1, px: 2.5 }}>
                                     Batch ID
-                                  </th>
-                                  <th className="px-3 py-2 font-bold text-slate-500 uppercase tracking-wider">
+                                  </TableCell>
+                                  <TableCell sx={{ fontSize: "11px", fontWeight: 700, color: "#64748b", py: 1, px: 2.5 }}>
                                     Received Time
-                                  </th>
-                                  <th className="px-3 py-2 font-bold text-slate-500 uppercase tracking-wider">
+                                  </TableCell>
+                                  <TableCell sx={{ fontSize: "11px", fontWeight: 700, color: "#64748b", py: 1, px: 2.5 }}>
                                     Unit Price
-                                  </th>
-                                  <th className="px-3 py-2 font-bold text-slate-500 uppercase tracking-wider">
+                                  </TableCell>
+                                  <TableCell sx={{ fontSize: "11px", fontWeight: 700, color: "#64748b", py: 1, px: 2.5 }}>
                                     Original Qty
-                                  </th>
-                                  <th className="px-3 py-2 font-bold text-slate-500 uppercase tracking-wider">
+                                  </TableCell>
+                                  <TableCell sx={{ fontSize: "11px", fontWeight: 700, color: "#64748b", py: 1, px: 2.5 }}>
                                     Remaining Qty
-                                  </th>
-                                  <th className="px-3 py-2 font-bold text-slate-500 uppercase tracking-wider">
+                                  </TableCell>
+                                  <TableCell sx={{ fontSize: "11px", fontWeight: 700, color: "#64748b", py: 1, px: 2.5 }}>
                                     Remaining Value
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
+                                  </TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
                                 {group.items.map((b) => (
-                                  <tr key={b.id} className="hover:bg-slate-50/50">
-                                    <td className="px-3 py-2.5 font-semibold text-slate-500">
+                                  <TableRow
+                                    key={b.id}
+                                    hover
+                                    sx={{ "& td": { py: 1, px: 2.5, borderBottom: "1px solid #f8fafc" } }}
+                                  >
+                                    <TableCell sx={{ fontSize: "11px", color: "#64748b", fontWeight: 600 }}>
                                       BATCH-{b.id}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-slate-500">
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: "11px", color: "#64748b" }}>
                                       {formatTime(b.created_at)}
-                                    </td>
-                                    <td className="px-3 py-2.5 font-bold text-slate-800">
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: "11px", color: "#334155", fontWeight: 700 }}>
                                       ₹{parseFloat(b.unit_price).toFixed(2)}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-slate-600">
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: "11px", color: "#475569" }}>
                                       {b.quantity} units
-                                    </td>
-                                    <td className="px-3 py-2.5">
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: "11px" }}>
                                       {b.remaining_quantity === 0 ? (
                                         <span className="font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100/50 text-[11px]">
                                           0 units
@@ -197,33 +261,96 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                                           {b.remaining_quantity} units
                                         </span>
                                       )}
-                                    </td>
-                                    <td className="px-3 py-2.5 font-extrabold text-slate-800">
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: "11px", color: "#1e293b", fontWeight: 800 }}>
                                       ₹{(b.remaining_quantity * parseFloat(b.unit_price)).toFixed(2)}
-                                    </td>
-                                  </tr>
+                                    </TableCell>
+                                  </TableRow>
                                 ))}
-                              </tbody>
-                            </table>
+                              </TableBody>
+                            </Table>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     )}
                   </React.Fragment>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-      />
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-5 pt-4 border-t border-slate-100 bg-white">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div className="text-xs font-semibold text-slate-500">
+              Showing <span className="font-bold text-slate-800">{totalItems === 0 ? 0 : startIndex + 1}</span> to{" "}
+              <span className="font-bold text-slate-800">{endIndex}</span> of{" "}
+              <span className="font-bold text-slate-800">{totalItems}</span> entries
+            </div>
+
+            {/* Custom styled select selector dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-400 font-semibold">Show:</span>
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(Number(e.target.value));
+                  setPage(0);
+                }}
+                className="bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-2.5 py-1 text-[11px] font-bold outline-none focus:border-emerald-500 focus:bg-white transition-all cursor-pointer shadow-sm hover:border-slate-300"
+              >
+                {[5, 10, 25, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size} rows
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className={`flex items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+                page === 0
+                  ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
+              }`}
+            >
+              <ChevronLeft size={14} />
+            </button>
+
+            {getPageNumbers().map((pageIdx) => (
+              <button
+                key={pageIdx}
+                onClick={() => setPage(pageIdx)}
+                className={`w-8 h-8 flex items-center justify-center text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                  page === pageIdx
+                    ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
+                }`}
+              >
+                {pageIdx + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className={`flex items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+                page >= totalPages - 1
+                  ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
+              }`}
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
