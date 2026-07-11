@@ -22,7 +22,7 @@ const startServer = async () => {
         console.error("⚠️ Kafka initialization failed. Continuing server start...", kafkaError);
       }
       
-      app.listen(PORT, () => {
+      app.listen(PORT, "0.0.0.0", () => {
         console.log(`🟢 Server is Running on port ${PORT}`);
       });
     } else {
