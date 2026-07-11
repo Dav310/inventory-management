@@ -100,19 +100,20 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
+    const pagesCount = Math.max(1, totalPages);
 
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 0; i < totalPages; i++) {
+    if (pagesCount <= maxVisiblePages) {
+      for (let i = 0; i < pagesCount; i++) {
         pages.push(i);
       }
     } else {
       let start = Math.max(0, page - 2);
-      let end = Math.min(totalPages - 1, page + 2);
+      let end = Math.min(pagesCount - 1, page + 2);
 
       if (page <= 2) {
         end = 4;
-      } else if (page >= totalPages - 3) {
-        start = totalPages - 5;
+      } else if (page >= pagesCount - 3) {
+        start = pagesCount - 5;
       }
 
       for (let i = start; i <= end; i++) {
@@ -281,76 +282,74 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-5 pt-4 border-t border-slate-100 bg-white">
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-            <div className="text-xs font-semibold text-slate-500">
-              Showing <span className="font-bold text-slate-800">{totalItems === 0 ? 0 : startIndex + 1}</span> to{" "}
-              <span className="font-bold text-slate-800">{endIndex}</span> of{" "}
-              <span className="font-bold text-slate-800">{totalItems}</span> entries
-            </div>
-
-            {/* Custom styled select selector dropdown */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400 font-semibold">Show:</span>
-              <select
-                value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
-                  setPage(0);
-                }}
-                className="bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-2.5 py-1 text-[11px] font-bold outline-none focus:border-emerald-500 focus:bg-white transition-all cursor-pointer shadow-sm hover:border-slate-300"
-              >
-                {[5, 10, 25, 50].map((size) => (
-                  <option key={size} value={size}>
-                    {size} rows
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-5 pt-4 border-t border-slate-100 bg-white">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="text-xs font-semibold text-slate-500">
+            Showing <span className="font-bold text-slate-800">{totalItems === 0 ? 0 : startIndex + 1}</span> to{" "}
+            <span className="font-bold text-slate-800">{endIndex}</span> of{" "}
+            <span className="font-bold text-slate-800">{totalItems}</span> entries
           </div>
 
-          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className={`flex items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
-                page === 0
-                  ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
-              }`}
+          {/* Custom styled select selector dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-400 font-semibold">Show:</span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setPage(0);
+              }}
+              className="bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-2.5 py-1 text-[11px] font-bold outline-none focus:border-emerald-500 focus:bg-white transition-all cursor-pointer shadow-sm hover:border-slate-300"
             >
-              <ChevronLeft size={14} />
-            </button>
-
-            {getPageNumbers().map((pageIdx) => (
-              <button
-                key={pageIdx}
-                onClick={() => setPage(pageIdx)}
-                className={`w-8 h-8 flex items-center justify-center text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                  page === pageIdx
-                    ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
-                }`}
-              >
-                {pageIdx + 1}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className={`flex items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
-                page >= totalPages - 1
-                  ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
-              }`}
-            >
-              <ChevronRight size={14} />
-            </button>
+              {[5, 10, 25, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size} rows
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-      )}
+
+        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className={`flex items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+              page === 0
+                ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
+            }`}
+          >
+            <ChevronLeft size={14} />
+          </button>
+
+          {getPageNumbers().map((pageIdx) => (
+            <button
+              key={pageIdx}
+              onClick={() => setPage(pageIdx)}
+              className={`w-8 h-8 flex items-center justify-center text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                page === pageIdx
+                  ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
+                }`}
+            >
+              {pageIdx + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPage((p) => Math.min(Math.max(1, totalPages) - 1, p + 1))}
+            disabled={page >= Math.max(1, totalPages) - 1}
+            className={`flex items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+              page >= Math.max(1, totalPages) - 1
+                ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.95]"
+            }`}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
