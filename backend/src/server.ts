@@ -6,22 +6,24 @@ import { env } from "./config/env.ts";
 import { initTopics } from "./kafka/topics.ts";
 import { startConsumer } from "./kafka/consumer.ts";
 
-const PORT = env.PORT || 5000;
-
+const PORT = 5000;
 
 const startServer = async () => {
   try {
     if (!process.env.VERCEL) {
       await pool.query("SELECT NOW()");
       console.log("🟢 Database connected");
-      
+
       try {
         await initTopics();
         await startConsumer();
       } catch (kafkaError) {
-        console.error("⚠️ Kafka initialization failed. Continuing server start...", kafkaError);
+        console.error(
+          "⚠️ Kafka initialization failed. Continuing server start...",
+          kafkaError,
+        );
       }
-      
+
       app.listen(PORT, "0.0.0.0", () => {
         console.log(`🟢 Server is Running on port ${PORT}`);
       });
