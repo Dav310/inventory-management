@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { LedgerEntry } from "../../hooks/useDashboardData.ts";
 import { styles } from "../../lib/styles.ts";
 import { Coins, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { Pagination } from "../ui/Pagination.tsx";
 
 interface TransactionLedgerProps {
   ledger: LedgerEntry[];
@@ -21,9 +22,23 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   ledgerTab,
   onTabChange,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [ledgerTab]);
+
   const filteredLedger = ledger.filter((e) =>
     ledgerTab === "buy" ? e.transaction_type === "purchase" : e.transaction_type === "sale"
   );
+
+  const totalItems = filteredLedger.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedLedger = filteredLedger.slice(startIndex, endIndex);
 
   return (
     <div className={styles.card}>
@@ -68,14 +83,14 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
             </tr>
           </thead>
           <tbody>
-            {filteredLedger.length === 0 ? (
+            {paginatedLedger.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-8 text-slate-400 font-semibold">
                   No {ledgerTab === "buy" ? "purchases" : "sales"} recorded yet.
                 </td>
               </tr>
             ) : (
-              filteredLedger.map((entry) => (
+              paginatedLedger.map((entry) => (
                 <tr key={entry.id} className={styles.tableRow}>
                   <td className={styles.tableCell}>{formatTime(entry.created_at)}</td>
                   <td className={styles.tableCell}>
@@ -117,6 +132,14 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

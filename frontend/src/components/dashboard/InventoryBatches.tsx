@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { InventoryBatch } from "../../hooks/useDashboardData.ts";
 import { styles } from "../../lib/styles.ts";
 import { Layers } from "lucide-react";
+import { Pagination } from "../ui/Pagination.tsx";
 
 interface InventoryBatchesProps {
   batches: InventoryBatch[];
@@ -21,6 +22,9 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
   expandedProductId,
   onToggleExpand,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const grouped: {
     product_id: string;
     product_name: string;
@@ -49,15 +53,26 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
     group.items.push(batch);
   });
 
+  const totalItems = grouped.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedGrouped = grouped.slice(startIndex, endIndex);
+
   return (
     <div className={styles.card}>
       <h2 className={styles.cardTitle}>
-        <Layers className="text-emerald-600" size={20} /> Active Inventory
-        Batches (FIFO Queue)
+        <Layers className="text-emerald-600" size={20} /> Active Inventory Batches (FIFO Queue)
       </h2>
       <p className="text-xs text-slate-500 mb-4">
-        Oldest batches are consumed first. Click a product row to inspect its
-        active batches.
+        Oldest batches are consumed first. Click a product row to inspect its active batches.
       </p>
       <div className={styles.tableContainer}>
         <table className={styles.table}>
@@ -71,28 +86,21 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
             </tr>
           </thead>
           <tbody>
-            {grouped.length === 0 ? (
+            {paginatedGrouped.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="text-center py-8 text-slate-400 font-semibold"
-                >
+                <td colSpan={5} className="text-center py-8 text-slate-400 font-semibold">
                   Inventory is empty. Register purchases to add stock.
                 </td>
               </tr>
             ) : (
-              grouped.map((group) => {
+              paginatedGrouped.map((group) => {
                 const isExpanded = expandedProductId === group.product_id;
                 const avgCost =
-                  group.totalRemaining > 0
-                    ? group.totalValue / group.totalRemaining
-                    : 0;
+                  group.totalRemaining > 0 ? group.totalValue / group.totalRemaining : 0;
                 return (
                   <React.Fragment key={group.product_id}>
                     <tr
-                      onClick={() =>
-                        onToggleExpand(isExpanded ? null : group.product_id)
-                      }
+                      onClick={() => onToggleExpand(isExpanded ? null : group.product_id)}
                       className={`${styles.tableRow} cursor-pointer border-l-4 ${
                         isExpanded
                           ? "border-l-emerald-500 bg-emerald-50/10"
@@ -103,27 +111,20 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                         <div className="flex items-center gap-2">
                           <span
                             className={`text-[9px] transition-transform duration-200 ${
-                              isExpanded
-                                ? "rotate-90 text-emerald-600"
-                                : "text-slate-400"
+                              isExpanded ? "rotate-90 text-emerald-600" : "text-slate-400"
                             }`}
                           >
                             ▶
                           </span>
                           <div>
-                            <div className="font-bold text-slate-800">
-                              {group.product_name}
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              {group.product_id}
-                            </div>
+                            <div className="font-bold text-slate-800">{group.product_name}</div>
+                            <div className="text-xs text-slate-400">{group.product_id}</div>
                           </div>
                         </div>
                       </td>
                       <td className={styles.tableCell}>
                         <span className="font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
-                          {group.batchesCount}{" "}
-                          {group.batchesCount === 1 ? "batch" : "batches"}
+                          {group.batchesCount} {group.batchesCount === 1 ? "batch" : "batches"}
                         </span>
                       </td>
                       <td className={styles.tableCell}>
@@ -132,15 +133,11 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                             0 units
                           </span>
                         ) : (
-                          <span className="font-bold text-slate-800">
-                            {group.totalRemaining} units
-                          </span>
+                          <span className="font-bold text-slate-800">{group.totalRemaining} units</span>
                         )}
                       </td>
                       <td className={styles.tableCell}>
-                        <span className="font-bold text-slate-800">
-                          ₹{avgCost.toFixed(2)}
-                        </span>
+                        <span className="font-bold text-slate-800">₹{avgCost.toFixed(2)}</span>
                       </td>
                       <td className={styles.tableCell}>
                         <span className="font-extrabold text-emerald-700">
@@ -150,10 +147,7 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                     </tr>
                     {isExpanded && (
                       <tr className="bg-slate-50/30">
-                        <td
-                          colSpan={5}
-                          className="px-4 py-3.5 border-b border-slate-100"
-                        >
+                        <td colSpan={5} className="px-4 py-3.5 border-b border-slate-100">
                           <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
                             <table className="w-full text-xs text-left text-slate-600">
                               <thead>
@@ -180,10 +174,7 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                               </thead>
                               <tbody>
                                 {group.items.map((b) => (
-                                  <tr
-                                    key={b.id}
-                                    className="hover:bg-slate-50/50"
-                                  >
+                                  <tr key={b.id} className="hover:bg-slate-50/50">
                                     <td className="px-3 py-2.5 font-semibold text-slate-500">
                                       BATCH-{b.id}
                                     </td>
@@ -208,11 +199,7 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
                                       )}
                                     </td>
                                     <td className="px-3 py-2.5 font-extrabold text-slate-800">
-                                      ₹
-                                      {(
-                                        b.remaining_quantity *
-                                        parseFloat(b.unit_price)
-                                      ).toFixed(2)}
+                                      ₹{(b.remaining_quantity * parseFloat(b.unit_price)).toFixed(2)}
                                     </td>
                                   </tr>
                                 ))}
@@ -229,6 +216,14 @@ export const InventoryBatches: React.FC<InventoryBatchesProps> = ({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
