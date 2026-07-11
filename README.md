@@ -1,141 +1,81 @@
-# FIFO Inventory Management - Frontend Portal
+# FIFO Inventory Management System
 
-This is the interactive single-page dashboard application for the FIFO Inventory Management System. It communicates with the backend REST APIs to present stock levels, ledger reports, and dynamic batch breakdowns.
-
-## Features & Visual Modules
-
-- **Live Data Sync**: Implements 3-second auto-polling to keep inventory levels, ledger entries, and KPI cards updated in real-time.
-- **Product Stock Overview (Accordion Grouping)**:
-  - Lists unique product items with their total remaining stock units, total current valuations, and calculated average cost per unit.
-  - Clicking a product row expands an accordion sub-table displaying detailed active batches (Received Time, Unit Price, Original Qty, Remaining Qty, and Value).
-  - If a batch or product runs completely out of stock, its indicator turns red.
-- **Transaction Ledger Tabs**:
-  - Provides two dedicated view tabs for Buy (Purchases) and Sell (Sales).
-  - Displays quantities, dates, unit prices, and total margins.
-- **Administrative Actions**:
-  - Contains reactive tabs to:
-    - Register new product codes.
-    - Post a new purchase transaction (which generates a Kafka buy event).
-    - Post a new sale transaction (which generates a Kafka sell event).
-- **Login View**:
-  - Secure access control screen with remember-me cookie functionality and an inner-input eye icon toggle to reveal/hide credentials.
+A real-time, event-driven inventory management platform that handles product registration, purchase (buy) and sales (sell) events, and calculates real-time valuations using the First-In-First-Out (FIFO) costing strategy.
 
 ---
 
-## Technical Stack
+## 📌 Links to Frontend & Backend
 
-- **Framework**: React.js (Vite + TypeScript)
-- **Styling**: Tailwind CSS
-- **Forms**: React Hook Form
-- **HTTP Clients**: Axios
-- **Icons**: Lucide React
-
----
-
-## Setup & Running Locally
-
-### 1. Environment Setup
-
-Create a `.env` file in the root frontend directory:
-
-```env
-VITE_API_URL=http://localhost:5000
-```
-
-### 2. Install and Start
-
-Run the following commands:
-
-```bash
-pnpm install
-pnpm dev
-```
-
-The frontend portal will start at `http://localhost:5173`. Ensure the backend server is running so that API requests resolve correctly.
-
-FIFO Inventory Management - Backend API
-This is the backend service for the FIFO Inventory Management System. It handles JWT authentication, product registration, buy/sell transactions, and real-time event ingestion using Apache Kafka.
-The service calculates inventory costs dynamically using the **First-In-First-Out (FIFO)** queue strategy.
-
-## Key Features
-
-- **Real-time Event Ingestion**: Subscribes to a Kafka topic (`inventory-events`) to process incoming purchase and sale transactions asynchronously.
-- **FIFO Costing Logic**: Deducts sales from the oldest available inventory batches and logs the exact transaction margins and remaining valuations.
-- **Secure API endpoints**: Protects administrative routes using token-based JWT middleware.
-- **Clean Architecture**: Structured using a feature-based modular layout (Auth, Products, Purchases, Sales, Ledger, Inventory, Dashboard).
+- 🖥️ **Frontend Directory**: [frontend/](file:///e:/Project/inventory-management/frontend) — Contains the React + Vite single-page dashboard app.
+- ⚙️ **Backend Directory**: [backend/](file:///e:/Project/inventory-management/backend) — Contains the Express.js API server & Kafka ingestion consumers.
+- 📖 **Frontend README**: [frontend/README.md](file:///e:/Project/inventory-management/frontend/README.md)
+- 📖 **Backend README**: [backend/README.md](file:///e:/Project/inventory-management/backend/README.md)
 
 ---
 
-## FIFO Costing Algorithm Explained
+## 📋 Brief on FIFO Ingestion Logic
 
-The core business logic runs within a database transaction to ensure costing accuracy:
+The application processes purchases and sales using the **First-In, First-Out (FIFO)** inventory queue strategy to maintain accurate asset valuations and transaction profit margins.
 
-1.  **On Purchase (Buy)**:
-    - A purchase event triggers the insertion of a new batch into the `inventory_batch` table.
-    - The batch stores `quantity`, `remaining_quantity` (initially equal to quantity), and `unit_price`.
-2.  **On Sale**:
-    - A sale event queries active batches for the given product code sorted by `created_at ASC` (oldest first).
-    - The system consumes inventory from these batches sequentially until the order quantity is fulfilled.
-    - If a batch has sufficient units, its `remaining_quantity` is updated. If not, it is set to `0` and the next oldest batch is processed.
-    - The cost of goods sold is recorded in the `sales` table based on the original unit prices of the consumed batches.
-
----
-
-## Technical Stack
-
-- **Runtime**: Node.js
-- **Framework**: Express.js (TypeScript)
-- **Database**: PostgreSQL (using raw SQL queries via `pg` pool client)
-- **Messaging**: Apache Kafka (using `kafkajs`)
+### How it Works:
+1. **On Purchase (Buy Event)**:
+   - When a purchase transaction is published, a new batch is appended to the `inventory_batch` table.
+   - The batch records the `quantity`, `remaining_quantity` (initially equal to quantity), and `unit_price`, tracking exactly when it was received.
+2. **On Sale (Sell Event)**:
+   - A sale queries active batches where `remaining_quantity > 0`, sorted by `created_at ASC` (ensuring the oldest stock is processed first).
+   - The costing engine iterates through the queue, consuming quantities from the oldest batches:
+     - If the oldest batch holds more stock than requested, it subtracts the sold amount.
+     - If it holds less, the batch is fully consumed (drained to `0`), and the system processes the next oldest active batch until the sale is fulfilled.
+   - Cost of Goods Sold (COGS) is calculated dynamically based on the exact purchase rates of the consumed batches, logging profit margins in the `inventory_ledger`.
 
 ---
 
-## Setup & Local Run
+## 🚀 How to Run the Producer Locally
 
-### Prerequisites
+The system includes a local simulator script to publish mock purchase and sales events to the Kafka broker for local testing.
 
-- Node.js (v18+)
-- pnpm
-- PostgreSQL running database instance
-- Kafka broker (or Redpanda container)
+### Prerequisites:
+- Ensure PostgreSQL is running and migrations are set up.
+- Ensure Redpanda/Kafka docker containers are active.
 
-### 1. Database Setup
+### Running the Kafka Event Simulator:
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Run the simulator script:
+   ```bash
+   npx tsx src/scripts/kafka-simulator.ts
+   ```
+3. **What this does**:
+   - Checks the database for registered products. Seeds a default product `PRD001` if empty.
+   - Publishes 6 simulated events to the `inventory-events` topic:
+     - 3 purchases (buys) at varying prices (e.g. 10 units at ₹100, 20 units at ₹110, 15 units at ₹120).
+     - 3 sales (sells) of varying quantities (e.g. 5, 15, and 10 units), which triggers the FIFO consumption code and calculates exact cogs margins.
 
-Execute the SQL DDL statements inside `src/sql/schema.sql` on your PostgreSQL database instance to set up tables (`users`, `products`, `inventory_batch`, `sales`, `purchases`, `inventory_ledger`).
+---
 
-### 2. Environment Setup
+## 🛠️ Project Services Setup
 
-Create a `.env` file in the root backend directory:
+### Backend Local Run
+1. Create a `.env` file in the `backend/` folder (refer to `.env.example`).
+2. Run commands:
+   ```bash
+   cd backend
+   pnpm install
+   pnpm dev
+   ```
+   *Server runs at `http://localhost:5000`.*
 
-### 3. Run Services
-
-Install dependencies and run the server in development watch mode:
-
-```bash
-pnpm install
-pnpm dev
-```
-
-## The server starts at `http://localhost:5000`. It will automatically connect to the PostgreSQL database, establish Kafka consumer connectivity, and create the `inventory-events` topic if it does not already exist.
-
-## API Endpoints Reference
-
-### Authentication
-
-- `POST /api/auth/login` - Authenticate credentials and retrieve a JWT token.
-
-### Dashboard Stats
-
-- `GET /api/dashboard/stats` - Total products, total remaining units, total inventory valuation, and weighted average unit cost.
-
-### Operations
-
-- `GET /api/products` - Query registered inventory items.
-- `POST /api/products` - Register a new product code.
-- `POST /api/purchases` - Publish a buy transaction event to Kafka.
-- `POST /api/sales` - Publish a sell transaction event to Kafka.
-
-### Reports
-
-- `GET /api/inventory` - Fetch active stock batches grouped by product.
-- `GET /api/ledger` - Fetch transaction ledger (purchases and sales history).
+### Frontend Local Run
+1. Create a `.env` file in the `frontend/` folder.
+   ```env
+   VITE_API_URL=http://localhost:5000
+   ```
+2. Run commands:
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev
+   ```
+   *Dashboard opens at `http://localhost:5173`.*
