@@ -6,7 +6,7 @@ import { env } from "./config/env.ts";
 import { initTopics } from "./kafka/topics.ts";
 import { startConsumer } from "./kafka/consumer.ts";
 
-const PORT = env.PORT || 5000;
+const PORT = 5000;
 
 const startServer = async () => {
   try {
